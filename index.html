@@ -14,6 +14,8 @@ main{max-width:1400px}.grid{position:relative;isolation:isolate;gap:20px 8px;pad
 .thanks{text-align:center;padding:0 20px 55px}.thanks p{color:#b6a991;font-size:11px;letter-spacing:3px;text-transform:uppercase}.thanks h2{font:400 42px Creepster,Impact,fantasy;color:var(--orange);margin:10px 0;text-shadow:0 0 22px #ff701f33}.thanks span{font-size:12px;color:#939587}
 
 .caption-area{padding:0 22px 22px;text-align:center}.caption-button{border:1px solid #ff922e99;border-radius:24px;background:linear-gradient(135deg,#493016,#292b18);color:#ffd291;padding:12px 20px;font:600 14px/1.4 'DM Sans',sans-serif;cursor:pointer;box-shadow:0 0 18px #ff701f15;transition:box-shadow .2s,transform .2s}.caption-button:hover{box-shadow:0 0 24px #ff701f40;transform:translateY(-2px)}.caption-button span{color:#ff952e;margin-right:8px}.caption-quote{margin:18px 0 0;padding:18px 24px;border:1px solid #74804466;border-radius:28px 5px 28px 5px;background:linear-gradient(135deg,#26301b,#1b2117);color:#f2e6cf;font:400 17px/1.65 Georgia,serif;box-shadow:inset 3px 0 #71823d}.caption-credit{display:block;font:500 10px/1.5 'DM Sans',sans-serif;color:#bdac83;letter-spacing:2px;margin-top:9px}.caption-hint{color:#999b88;font-size:11px;margin:10px 0 0}.caption-area [hidden]{display:none}.modal-image img{height:min(56vh,560px)}@media(max-width:550px){.caption-area{padding:0 15px 18px}.caption-button{font-size:12px;padding:11px 15px}.caption-quote{font-size:15px;padding:15px}.modal-image{min-height:180px}.modal-image img{height:42vh}.modal-bottom{padding:14px}}
+
+.bat-flutter{position:fixed;inset:0;z-index:20;pointer-events:none;overflow:hidden;contain:strict}.flying-bat{position:absolute;left:0;top:0;width:38px;height:24px;will-change:transform;filter:drop-shadow(0 1px 2px #ff8b2844);opacity:.8}.flying-bat svg{width:100%;height:100%;overflow:visible}.bat-wing{transform-box:fill-box;animation:wing-flutter .23s ease-in-out infinite alternate}.bat-wing.left{transform-origin:right center}.bat-wing.right{transform-origin:left center}.flying-bat:nth-child(even) .bat-wing{animation-duration:.19s}@keyframes wing-flutter{from{transform:scaleY(1)}to{transform:scaleY(.28)}}@media(prefers-reduced-motion:reduce){.bat-flutter{display:none}}
 </style>
 </head>
 <body>
@@ -64,5 +66,35 @@ document.querySelector('#caption-button').onclick=()=>{
  captionPositions[current]=(position+1)%captions[current].length;
 };
 render();
+// Decorative bats never intercept interaction or enter the accessibility tree.
+(()=>{
+ const motion=window.matchMedia('(prefers-reduced-motion: reduce)');
+ const touch=window.matchMedia('(hover: none), (pointer: coarse)');
+ const layer=document.createElement('div');layer.className='bat-flutter';layer.setAttribute('aria-hidden','true');document.body.append(layer);
+ const flock=Array.from({length:5},(_,i)=>{
+  const bat=document.createElement('div');bat.className='flying-bat';
+  bat.innerHTML='<svg viewBox="0 0 80 44"><g fill="#241a30" stroke="#94715a" stroke-width="1.2"><path class="bat-wing left" d="M39 22 Q22 4 3 5 Q8 16 5 28 Q14 21 20 32 Q26 24 38 34Z"/><path class="bat-wing right" d="M41 22 Q58 4 77 5 Q72 16 75 28 Q66 21 60 32 Q54 24 42 34Z"/><path d="M34 19 L34 9 L40 15 L46 9 L46 20 Q52 31 40 40 Q28 31 34 19Z"/></g><g fill="#ffb058"><circle cx="37" cy="22" r="1.4"/><circle cx="43" cy="22" r="1.4"/></g></svg>';
+  layer.append(bat);return {element:bat,x:innerWidth*.5+i*25,y:innerHeight*.3+i*20};
+ });
+ let target={x:innerWidth*.5,y:innerHeight*.3},following=false,frame=0,last=0,elapsed=0;
+ window.addEventListener('pointermove',e=>{if(e.pointerType==='mouse'){target={x:e.clientX,y:e.clientY};following=true}},{passive:true});
+ document.documentElement.addEventListener('pointerleave',()=>{following=false});
+ function animate(now){
+  const dt=last?Math.min((now-last)/1000,.05):1/60;last=now;elapsed+=dt;
+  const mobile=touch.matches;
+  flock.forEach((bat,i)=>{
+   const phase=elapsed*(.65+i*.035)+i*1.3;
+   let x,y;
+   if(mobile||!following){x=innerWidth*(.5+.36*Math.sin(phase*.72));y=innerHeight*(.46+.33*Math.cos(phase*.91+i*.4))}
+   else{x=target.x-40-i*15+Math.sin(phase*3)*24;y=target.y-35+Math.cos(phase*3+i)*26+i*12}
+   const ease=1-Math.exp(-dt*(mobile?1.5:5-i*.5));bat.x+=(x-bat.x)*ease;bat.y+=(y-bat.y)*ease;
+   bat.x=Math.max(3,Math.min(innerWidth-42,bat.x));bat.y=Math.max(3,Math.min(innerHeight-30,bat.y));
+   bat.element.style.transform=`translate3d(${bat.x}px,${bat.y}px,0) rotate(${Math.sin(phase*2)*14}deg) scale(${.65+i*.07})`;
+  });
+  frame=requestAnimationFrame(animate);
+ }
+ function sync(){cancelAnimationFrame(frame);frame=0;last=0;const active=!motion.matches&&!document.hidden;layer.hidden=!active;if(active)frame=requestAnimationFrame(animate)}
+ motion.addEventListener('change',sync);document.addEventListener('visibilitychange',sync);sync();
+})();
 </script>
 </body></html>
