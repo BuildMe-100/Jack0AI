@@ -1,13 +1,11 @@
 # B SCARY
 
-A responsive, static pumpkin carving showcase for 13 contestants. Open `index.html` directly, or serve it with:
+A responsive, illustrated pumpkin patch showcasing 13 pumpkin carving contestants. Click a pumpkin or its wooden name sign to animate it and reveal the contestant photo. The dialog supports previous/next buttons, arrow keys, and Escape. Reduced-motion preferences are respected.
+
+Open `index.html` directly, or serve with:
 
 ```sh
 python3 -m http.server 3000 --directory /workspace/Jack0AI
 ```
 
-Select multiple images with **Add contestant photos** to preview them for the current browser session. Images are ordered by filename; names such as `01-Alex.jpg` supply contestant captions. Permanent images can be placed in an assets directory and referenced from the contestant data in `index.html`.
-
-No build step or package installation is required. Google Fonts is optional; local fallback fonts work offline.
-
-The 13 supplied contestant photos are included in `assets/contestants/` and load automatically. Their original filenames provide the creation titles. Images are orientation-corrected and resized to at most 2000 pixels for the web.
+All photos are included in `assets/contestants/`. No build step or dependencies are needed. The Creepster display font is bundled locally with its open font license; Google Fonts supplies an optional body font.
